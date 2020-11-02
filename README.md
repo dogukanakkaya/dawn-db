@@ -33,7 +33,7 @@ $result = $db->select('users.name as userName, posts.name as postName')
 # For mode 1: it returns you an array with db column keys
 # For mode 2: it returns you an array with index numbers
 # For mode 3: it returns you an array with both column keys and index numbers
-###*** You must use while loop on returned result, if you don't you get only one record ***###
+###*** You must use while loop on returned result, if you want you get only one record ***###
 while ($row = $result->fetchArray(1)) {
     echo "<pre>";
     print_r($row);
@@ -41,7 +41,7 @@ while ($row = $result->fetchArray(1)) {
 }
 ```
 
-#### Where
+### Where
 
 ```php
 # Allowed where operators are: ['=', '>', '<', '>=', '<=']
@@ -54,21 +54,21 @@ $db->where([
 ]) // WHERE id = 2 AND count <= 15 AND email='doguakkaya27@gmail.com'
 ```
 
-#### Where In/Not In
+### Where In/Not In
 
 ```php
 $db->in('id', [1,2])->get('users'); // SELECT * FROM users WHERE id IN (1,2)
 $db->notIn('id', [1,2])->get('users'); // SELECT * FROM users WHERE id NOT IN (1,2)
 ```
 
-#### Where Like/Not Like
+### Where Like/Not Like
 
 ```php
 $db->like('name', 'Dogukan%')->get('users'); // SELECT * FROM users WHERE name LIKE 'Dogukan%'
 $db->notLike('name', '%Codethereal%')->get('users'); // SELECT * FROM users WHERE name LIKE '%Codethereal%'
 ```
 
-#### Order By
+### Order By
 
 ```php
 $db->orderBy('name', 'ASC')->get('users'); // SELECT * FROM users ORDER BY name ASC
@@ -78,7 +78,7 @@ $db->orderBy([
 ])->get('users'); // SELECT * FROM users ORDER BY name ASC, id DESC
 ```
 
-#### Joins
+### Joins
 
 ```php
 # Available join methods are: ['INNER', 'CROSS', 'LEFT (OUTER)']
@@ -86,44 +86,39 @@ $db->select('users.name as userName, posts.name as postName')->join('users', 'us
 $db->select('users.name as userName, posts.name as postName')->join('users', 'users.id = posts.user_id', DBLite::JOIN_INNER)->get('posts');
 ```
 
-#### Count
+### Count
 
 ```php
 $db->where('views', '>', 10)->count('posts'); // SELECT COUNT(*) as count FROM posts | and returns whatever is count else 0
 ```
-<br/>
 
 ## Creating
 
 ```php
-$db->insert('users', ['name' => 'Dogukan Akkaya', 'email' => 'doguakkaya27@gmail.com']); // INSERT INTO users (name, email) VALUES ('Dogukan Akkaya', 'doguakkaya27@gmail.com')
+$db->insert('users', ['name' => 'Dogukan Akkaya', 'email' => 'doguakkaya27@gmail.com']); // INSERT INTO users (name, email) VALUES ('Dogukan Akkaya', 'doguakkaya27@gmail.com') | Returns insert id on success
 ```
-<br/>
 
 ## Updating
 
 ```php
 $db->where('id', 1)->update('users', ['name' => 'Dogukan Akkaya | Codethereal', 'email' => 'doguakkaya27@codethereal.com']); // UPDATE users SET name = 'Dogukan Akkaya | Codethereal', email = 'doguakkaya27@codethereal.com' WHERE id = 1
 ```
-<br/>
 
 ## Deleting
 
 ```php
 $db->where('id', 1)->delete('users'); // DELETE FROM users WHERE id = 1
 ```
-<br/>
 
 ## Transaction
 
 ```php
-# You don't have to wrap with try-catch block. It will rollback if there are any error
+# You don't have to wrap with try-catch block. It will rollback on any error
 $db->transBegin();
-$db->insert('users', ['name' => 'Codethereal', 'email' => 'info@codethereal.com']);
-$db->insert('postss', ['name' => 'New post', 'user_id' => 1]);
+$id = $db->insert('users', ['name' => 'Codethereal', 'email' => 'info@codethereal.com']);
+$db->insert('postss', ['name' => 'New post', 'user_id' => $id]);
 $db->transCommit();
 ```
-<br/>
 
 #### Others
 
@@ -137,9 +132,8 @@ $db->bindAndExecute([":id", 1]); // Executes the sql and returns the result
 # OR
 $db->bindAndReturn([":id", 1]); // Returns the sql statement without execution
 ```
-<br/>
 
-## CRUD Model for SQLitethereal
+# CRUD Model for SQLitethereal
 
 ```php
 use \Codethereal\Database\Sqlite\CrudLite;
@@ -169,9 +163,8 @@ $user->create(['name' => 'Codethereal']);
 $user->update(['name' => 'Codethereal'], 1); # Second parameter is the primary key value
 $user->delete(1);
 ```
-<br/>
 
-## Migrations
+# Migrations
 Migrations are not applied to core files at the moment but you can just copy the content of [this file](https://www.codethereal.com/migrations.txt) 
 and paste it into your **migrations.php** file in root folder and run from terminal
 
@@ -182,7 +175,7 @@ $path = __DIR__ . "/migrations";
 $db = new DBLite('test.db');
 ```
 
-#### Create Migration File
+### Create Migration File
 
 You do need 3 functions inside a migration, **up, down, seed**
 Create a migrations directory (or whatever you set in the migrations.php file) in your root folder and create a new file named **M001_posts**

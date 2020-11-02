@@ -176,8 +176,7 @@ class DBLite extends SQLite3
             $statement->bindValue(":$key", $value);
         }
         $this->end();
-        $statement->execute();
-        return $this->lastInsertRowID();
+        return $statement->execute() ? $this->lastInsertRowID() : false;
     }
 
     public function update(string $table, array $data)
