@@ -29,7 +29,7 @@ class DBLite extends SQLite3
      * @var array|string[]
      * Allowed where condition operators
      */
-    private array $allowedOperators = ['=', '>', '<', '>=', '<=', '!%', '%', 'LIKE', 'NOT LIKE', 'IN', 'NOT IN'];
+    private array $allowedOperators = ['=', '>', '<', '>=', '<=', 'LIKE', 'NOT LIKE', 'IN', 'NOT IN'];
 
     /**
      * @var array
@@ -118,6 +118,7 @@ class DBLite extends SQLite3
         array_push($this->where, "$column IN ($inQuery)");
         return $this;
     }
+
     public function notIn(string $column, array $values)
     {
         foreach ($values as &$value) {
