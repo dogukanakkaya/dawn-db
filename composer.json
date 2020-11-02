@@ -1,0 +1,15 @@
+{
+    "name": "codethereal/sqlite-php",
+    "authors": [
+        {
+            "name": "Doğukan Akkaya",
+            "email": "doguakkaya27@gmail.com"
+        }
+    ],
+    "require": {},
+    "autoload": {
+        "psr-4": {
+            "Codethereal\\Database\\Sqlite\\": "."
+        }
+    }
+}
