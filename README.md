@@ -33,7 +33,7 @@ $result = $db->select('users.name as userName, posts.name as postName')
 # For mode 1: it returns you an array with db column keys
 # For mode 2: it returns you an array with index numbers
 # For mode 3: it returns you an array with both column keys and index numbers
-###*** You must use while loop on returned result, if you want you get only one record ***###
+###*** You must use while loop on returned result, if you don't you get only one record ***###
 while ($row = $result->fetchArray(1)) {
     echo "<pre>";
     print_r($row);
