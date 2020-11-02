@@ -98,6 +98,7 @@ $db->where('views', '>', 10)->count('posts'); // SELECT COUNT(*) as count FROM p
 ```php
 $db->insert('users', ['name' => 'Dogukan Akkaya', 'email' => 'doguakkaya27@gmail.com']); // INSERT INTO users (name, email) VALUES ('Dogukan Akkaya', 'doguakkaya27@gmail.com')
 ```
+<br/>
 
 ## Updating
 
