@@ -6,10 +6,14 @@
             "email": "doguakkaya27@gmail.com"
         }
     ],
-    "require": {},
+    "require": {
+        "php": ">=7.*"
+    },
     "autoload": {
         "psr-4": {
             "Codethereal\\Database\\Sqlite\\": "."
         }
-    }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable" : true
 }
