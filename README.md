@@ -168,11 +168,47 @@ $user->delete(1);
 Migrations are not applied to core files at the moment but you can just copy the content of [this file](https://www.codethereal.com/migrations.txt) 
 and paste it into your **migrations.php** file in root folder and run from terminal
 
-You should change dbname and migrations path in this file like:
+You should change dbname and migrations **(if your path and dbname is different)** path in this file like:
 
 ```php
 $path = __DIR__ . "/migrations";
 $db = new DBLite('test.db');
+```
+
+### Create Migration File
+
+You do need 3 functions inside a migration, **up, down, seed**
+Create a migrations directory (or whatever you set in the migrations.php file) in your root folder and create a new file named **M001_posts**
+
+```php
+<?php
+
+use Codethereal\Database\Sqlite\DBLite;
+
+class M001_posts
+{
+    private DBLite $db;
+    # $db instance will pass here when you run migrations.php
+    public function __construct(DBLite $db){$this->db = $db;}
+     
+    # Create posts table
+    public function up()
+    {
+        $this->db->query('CREATE TABLE posts (id INTEGER PRIMARY KEY, name TEXT NOT NULL, user_id INTEGER NOT NULL, FOREIGN KEY(user_id) REFERENCES users(id))');
+    }
+    
+    # Drop posts table
+    public function down()
+    {
+        $this->db->query('DROP TABLE IF EXISTS posts;');
+    }
+
+    # Seed the database with query builder. If you pass --seed argument to migrations.php from terminal, it will seed the database. 
+    public function seed()
+    {
+        $this->db->insert('posts', ['id' => 1,'name' => 'New post','user_id' => 1]);
+    }
+}
 ```
 
 ```
