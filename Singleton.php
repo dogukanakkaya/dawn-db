@@ -7,12 +7,15 @@ class Singleton extends SQLite3
 {
     private static $instance;
 
+    private static $path;
+
     /**
      * Call this method to get singleton
      * @return Singleton
      */
-    public static function instance()
+    public static function instance($path)
     {
+        self::$path = $path;
         # If no instance then make one
         if(!self::$instance) {
             self::$instance = new self();
@@ -24,7 +27,7 @@ class Singleton extends SQLite3
      * Make constructor private, so nobody can call "new Class".
      */
     private function __construct() {
-        $this->open('test.db');
+        $this->open(self::$path);
     }
 
     /**

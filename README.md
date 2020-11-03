@@ -17,7 +17,7 @@ use Codethereal\Database\Sqlite\LiteDB;
 To use sqlite you must create a new file for database like **test.db** then create a new instance from **DBLite** class.
 You must give the file path to constructor.
 ```php
-$db = new DBLite('test.db');
+$db = new LiteDB('test.db');
 ```
 <br/>
 
@@ -45,13 +45,13 @@ while ($row = $result->fetchArray(1)) {
 
 ```php
 # Allowed where operators are: ['=', '>', '<', '>=', '<=']
-$db->where('id', 2) // WHERE id = 2
-$db->where('id', '>', 2) // WHERE id > 2
+$db->where('id', 2)->get('users'); // SELECT * FROM users WHERE id = 2
+$db->where('id', '>', 2)->get('users'); // SELECT * FROM users WHERE id > 2
 $db->where([
   ['id', 2],
   ['count' '<=', 15],
   ['email', 'doguakkaya27@gmail.com']
-]) // WHERE id = 2 AND count <= 15 AND email='doguakkaya27@gmail.com'
+])->get('users'); // SELECT * FROM users WHERE id = 2 AND count <= 15 AND email='doguakkaya27@gmail.com'
 ```
 
 ### Where In/Not In
@@ -73,8 +73,8 @@ $db->notLike('name', '%Codethereal%')->get('users'); // SELECT * FROM users WHER
 ```php
 $db->orderBy('name', 'ASC')->get('users'); // SELECT * FROM users ORDER BY name ASC
 $db->orderBy([
-  ['name', DBLite::ORDER_ASC],
-  ['id', DBLite::ORDER_DESC],
+  ['name', LiteDB::ORDER_ASC],
+  ['id', LiteDB::ORDER_DESC],
 ])->get('users'); // SELECT * FROM users ORDER BY name ASC, id DESC
 ```
 
@@ -83,7 +83,7 @@ $db->orderBy([
 ```php
 # Available join methods are: ['INNER', 'CROSS', 'LEFT (OUTER)']
 $db->select('users.name as userName, posts.name as postName')->join('users', 'users.id = posts.user_id', 'CROSS')->get('posts');
-$db->select('users.name as userName, posts.name as postName')->join('users', 'users.id = posts.user_id', DBLite::JOIN_INNER)->get('posts');
+$db->select('users.name as userName, posts.name as postName')->join('users', 'users.id = posts.user_id', LiteDB::JOIN_INNER)->get('posts');
 ```
 
 ### Count
@@ -139,15 +139,25 @@ $db->bindAndReturn([":id", 1]); // Returns the sql statement without execution
 <?php 
 namespace whatever\model;
 
-use \Codethereal\Database\Sqlite\CrudLite;
+use \Codethereal\Database\Sqlite\LiteModel;
 
-class User extends CrudLite
+class Post extends LiteModel
 {
-    public function __construct(DBLite $db)
+    public function tableName(): string
     {
-        parent::__construct($db);
+        return 'posts';
     }
 
+    public function primaryKey(): string
+    {
+        return 'id';
+    }
+}
+
+namespace whatever\model;
+
+class User extends LiteModel
+{
     public function tableName(): string
     {
         return 'users';
@@ -159,14 +169,18 @@ class User extends CrudLite
     }
 }
 
-$user = new User($db);
+$post = new Post();
+
+# You can pass an array as second parameter to with() method like: ['reference' => 'user_id']
+# Default reference for it is the singular table name (without s at the end if exists) underscore id
+$withJoin = $post->with(User::class)->readOne(1, 'posts.name as postName, email');
 
 // read() and readOne() accepts select parameters optional, default *
-$user->read("*"); # Like get, you must iterate it in a while loop with fetchArray() method
-$user->readOne(1, "*"); # Pass the primary key value as param
-$user->create(['name' => 'Codethereal']);
-$user->update(['name' => 'Codethereal'], 1); # Second parameter is the primary key value
-$user->delete(1);
+$post->read("*"); # Like get, you must iterate it in a while loop with fetchArray() method
+$post->readOne(1, "*"); # Pass the primary key value as param
+$post->create(['name' => 'New post codethereal']);
+$post->change(['name' => 'New post codethereal updated'], 1); # Second parameter is the primary key value
+$post->destroy(1);
 ```
 
 # Migrations
@@ -177,7 +191,7 @@ You should change dbname and migrations **(if your path and dbname is different)
 
 ```php
 $path = __DIR__ . "/migrations";
-$db = new DBLite('test.db');
+$db = new LiteDB('test.db');
 ```
 
 ### Create Migration File

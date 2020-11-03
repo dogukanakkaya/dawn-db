@@ -48,10 +48,11 @@ class LiteDB extends Singleton
 
     /**
      * LiteDB constructor.
+     * @param string $path
      */
-    public function __construct()
+    public function __construct(string $path = "")
     {
-        $this->db = parent::instance();
+        $this->db = parent::instance($path);
     }
 
     public function select(string $select = "*")
@@ -254,6 +255,26 @@ class LiteDB extends Singleton
             $statement->bindValue($binding[0], $binding[1]);
         }
         return $statement;
+    }
+
+    /**
+     * Pure query method of SQLite3
+     * @param string $sql
+     * @return \SQLite3Result
+     */
+    public function query($sql)
+    {
+        return $this->db->query($sql);
+    }
+
+    /**
+     * Pure exec method of SQLite3
+     * @param string $sql
+     * @return bool
+     */
+    public function exec($sql)
+    {
+        return $this->db->exec($sql);
     }
 
     /**
