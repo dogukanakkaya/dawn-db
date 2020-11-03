@@ -6,7 +6,7 @@ composer require codethereal/sqlite-php
 ```
 <br/>
 
-After you installed the library include the autoload file and use the DBLite library.
+After you installed the library include the autoload file and use the LiteDB library.
 ```php
 include_once __DIR__ . "/vendor/autoload.php";
 
@@ -14,7 +14,7 @@ use Codethereal\Database\Sqlite\LiteDB;
 ```
 <br/>
 
-To use sqlite you must create a new file for database like **test.db** then create a new instance from **DBLite** class.
+To use sqlite you must create a new file for database like **test.db** then create a new instance from **LiteDB** class.
 You must give the file path to constructor.
 ```php
 $db = new LiteDB('test.db');
