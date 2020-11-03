@@ -268,6 +268,17 @@ class LiteDB extends Singleton
     }
 
     /**
+     * Pure querySingle method of SQLite3
+     * @param string $sql
+     * @param bool $entireRow
+     * @return mixed
+     */
+    public function querySingle($sql, $entireRow = false)
+    {
+        return $this->db->querySingle($sql, $entireRow);
+    }
+
+    /**
      * Pure exec method of SQLite3
      * @param string $sql
      * @return bool
