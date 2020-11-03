@@ -2,11 +2,10 @@
 
 namespace Codethereal\Database\Sqlite;
 
-use SQLite3;
+use Codethereal\Database\Sqlite\Singleton;
 
-class DBLite extends SQLite3
+class LiteDB extends Singleton
 {
-
     const ORDER_ASC = 'ASC';
     const ORDER_DESC = 'DESC';
 
@@ -14,20 +13,23 @@ class DBLite extends SQLite3
     const JOIN_LEFT = 'LEFT OUTER';
     const JOIN_CROSS = 'CROSS';
 
+    private Singleton $db;
+
     /**
      * @var array
      */
     private array $where = [];
 
     /**
+     * Bindings array
      * @var array
-     * Bindings for where conditions
      */
+
     private array $bindings = [];
 
     /**
-     * @var array|string[]
      * Allowed where condition operators
+     * @var array|string[]
      */
     private array $allowedOperators = ['=', '>', '<', '>=', '<=', 'LIKE', 'NOT LIKE', 'IN', 'NOT IN'];
 
@@ -43,18 +45,15 @@ class DBLite extends SQLite3
 
     /**
      * @var string
-     * Query string
      */
     private string $query = "";
 
     /**
-     * DBLite constructor.
-     * @param string $path
+     * LiteDB constructor.
      */
-    public function __construct(string $path)
+    public function __construct()
     {
-        $this->open($path);
-        $this->enableExceptions(false);
+        $this->db = parent::instance();
     }
 
     public function select(string $select = "*")
@@ -68,19 +67,19 @@ class DBLite extends SQLite3
         if (is_array($column) && count($column) > 0) {
             foreach ($column as $item) {
                 if (isset($item[2]) && in_array($operator, $this->allowedOperators)) {
-                    array_push($this->where, "$item[0] $item[1] :$item[0]");
-                    array_push($this->bindings, [":$item[0]", $item[2]]);
+                    $this->addWhere([$item[0], $item[1], ":$item[0]"]);
+                    $this->addBinding([":$item[0]", $item[2]]);
                 } else {
-                    array_push($this->where, "$item[0] = :$item[0]");
-                    array_push($this->bindings, [":$item[0]", $item[1]]);
+                    $this->addWhere([$item[0], "=", ":$item[0]"]);
+                    $this->addBinding([":$item[0]", $item[1]]);
                 }
             }
         } else if ($value !== null && in_array($operator, $this->allowedOperators)) {
-            array_push($this->where, "$column $operator :$column");
-            array_push($this->bindings, [":$column", $value]);
+            $this->addWhere([$column, $operator, ":$column"]);
+            $this->addBinding([":$column", $value]);
         } else {
-            array_push($this->where, "$column = :$column");
-            array_push($this->bindings, [":$column", $operator]);
+            $this->addWhere([$column, "=", ":$column"]);
+            $this->addBinding([":$column", $operator]);
         }
         return $this;
     }
@@ -115,7 +114,7 @@ class DBLite extends SQLite3
             $value = self::escapeString($value);
         }
         $inQuery = implode(",", $values);
-        array_push($this->where, "$column IN ($inQuery)");
+        $this->addWhere([$column, "IN", "($inQuery)"]);
         return $this;
     }
 
@@ -145,7 +144,7 @@ class DBLite extends SQLite3
     public function join(string $table, string $condition = "", $type = self::JOIN_LEFT)
     {
         $condition = !empty($condition) ? "ON $condition" : "";
-        array_push($this->joins, "$type JOIN $table $condition");
+        array_push($this->joins, " $type JOIN $table $condition");
         return $this;
     }
 
@@ -157,11 +156,15 @@ class DBLite extends SQLite3
         } else {
             $this->query = "SELECT * FROM $table";
         }
-
-        return $this->withWhere()->withOrder()->withJoin()->bindAndExecute($this->bindings);
+        return $this->withJoin()->withWhere()->withOrder()->bindAndExecute($this->bindings);
     }
 
-    public function insert(string $table, array $data)
+    public function row(string $table)
+    {
+        return $this->get($table)->fetchArray(SQLITE3_ASSOC);
+    }
+
+    public function insert(string $table, $data)
     {
         $keys = array_keys($data);
         $insertKeys = implode(",", $keys);
@@ -171,15 +174,15 @@ class DBLite extends SQLite3
 
         $this->query = "INSERT INTO $table ($insertKeys) VALUES ($insertParams)";
 
-        $statement = $this->prepare($this->query);
+        $statement = $this->db->prepare($this->query);
         foreach ($data as $key => $value) {
             $statement->bindValue(":$key", $value);
         }
         $this->end();
-        return $statement->execute() ? $this->lastInsertRowID() : false;
+        return $statement->execute() ? $this->db->lastInsertRowID() : false;
     }
 
-    public function update(string $table, array $data)
+    public function update(string $table, $data)
     {
         $params = array_map(fn($item) => "$item = :$item", array_keys($data));
         $params = implode(",", $params);
@@ -216,9 +219,9 @@ class DBLite extends SQLite3
     }
 
     /**
+     * Just begins a new sql query (mostly used with bindAndExecute() method)
      * @param string $sql
      * @return $this
-     * Just begins a new sql query (mostly used with bindAndExecute() method)
      */
     public function begin(string $sql)
     {
@@ -227,13 +230,13 @@ class DBLite extends SQLite3
     }
 
     /**
+     * Binds the values and executes it immediately
      * @param array $bindings
      * @return \SQLite3Result
-     * Binds the values and executes it immediately
      */
     public function bindAndExecute(array $bindings)
     {
-        $statement = $this->prepare($this->query);
+        $statement = $this->db->prepare($this->query);
         foreach ($bindings as $binding) {
             $statement->bindValue($binding[0], $binding[1]);
         }
@@ -242,13 +245,13 @@ class DBLite extends SQLite3
     }
 
     /**
+     * Binds the values and returns the statement instead executing it
      * @param array $bindings
      * @return false|\SQLite3Stmt
-     * Binds the values and returns the statement instead executing it
      */
     public function bindAndReturn(array $bindings)
     {
-        $statement = $this->prepare($this->query);
+        $statement = $this->db->prepare($this->query);
         foreach ($bindings as $binding) {
             $statement->bindValue($binding[0], $binding[1]);
         }
@@ -256,8 +259,8 @@ class DBLite extends SQLite3
     }
 
     /**
-     * @return $this
      * Combine query with where conditions
+     * @return $this
      */
     private function withWhere()
     {
@@ -269,8 +272,8 @@ class DBLite extends SQLite3
     }
 
     /**
-     * @return $this
      * Combine query with order conditions
+     * @return $this
      */
     private function withOrder()
     {
@@ -282,8 +285,8 @@ class DBLite extends SQLite3
     }
 
     /**
-     * @return $this
      * Combine query with joins
+     * @return $this
      */
     private function withJoin()
     {
@@ -313,5 +316,17 @@ class DBLite extends SQLite3
     public function transCommit()
     {
         $this->exec('COMMIT;');
+    }
+
+    private function addBinding($binding){
+        # Remove any dot notation inside column, table.key
+        $binding[0] = str_replace(".", "", $binding[0]);
+        array_push($this->bindings, $binding);
+    }
+
+    private function addWhere($where){
+        # Remove any dot notation inside column, table.key
+        $where[2] = str_replace(".", "", $where[2]);
+        array_push($this->where, implode(" ", $where));
     }
 }

@@ -10,7 +10,7 @@ After you installed the library include the autoload file and use the DBLite lib
 ```php
 include_once __DIR__ . "/vendor/autoload.php";
 
-use Codethereal\Database\Sqlite\DBLite;
+use Codethereal\Database\Sqlite\LiteDB;
 ```
 <br/>
 
@@ -26,9 +26,9 @@ Now you can start to use db queries like:
 ## Reading
 
 ```php
-$result = $db->select('users.name as userName, posts.name as postName')
-  ->where('users.id', 2)
-  ->get('posts');
+$oneRow = $db->select('name,email,password')->where('users.id', 2)->row('posts');
+
+$result = $db->select('name,email,password')->get('users');
   
 # For mode 1: it returns you an array with db column keys
 # For mode 2: it returns you an array with index numbers
@@ -136,6 +136,9 @@ $db->bindAndReturn([":id", 1]); // Returns the sql statement without execution
 # CRUD Model for SQLitethereal
 
 ```php
+<?php 
+namespace whatever\model;
+
 use \Codethereal\Database\Sqlite\CrudLite;
 
 class User extends CrudLite
@@ -157,8 +160,10 @@ class User extends CrudLite
 }
 
 $user = new User($db);
-$user->read(); # Like get, you must iterate it in a while loop with fetchArray() method
-$user->readOne(1); # Pass the primary key value as param
+
+// read() and readOne() accepts select parameters optional, default *
+$user->read("*"); # Like get, you must iterate it in a while loop with fetchArray() method
+$user->readOne(1, "*"); # Pass the primary key value as param
 $user->create(['name' => 'Codethereal']);
 $user->update(['name' => 'Codethereal'], 1); # Second parameter is the primary key value
 $user->delete(1);
@@ -183,13 +188,13 @@ Create a migrations directory (or whatever you set in the migrations.php file) i
 ```php
 <?php
 
-use Codethereal\Database\Sqlite\DBLite;
+use Codethereal\Database\Sqlite\LiteDB;
 
 class M001_posts
 {
-    private DBLite $db;
+    private LiteDB $db;
     # $db instance will pass here when you run migrations.php
-    public function __construct(DBLite $db){$this->db = $db;}
+    public function __construct(LiteDB $db){$this->db = $db;}
      
     # Create posts table
     public function up()
