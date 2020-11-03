@@ -1,8 +1,8 @@
 <?php
 namespace Codethereal\Database\Sqlite;
 
+use Codethereal\Database\Sqlite\Exceptions\MustBeInstanceOfLiteDB;
 use Codethereal\Database\Sqlite\Interfaces\ILiteModel;
-use Codethereal\Database\Sqlite\LiteDB;
 
 abstract class LiteModel extends LiteDB implements ILiteModel
 {
@@ -54,9 +54,17 @@ abstract class LiteModel extends LiteDB implements ILiteModel
 
     public function with($instance, array $options = array())
     {
+        # Throw exception if no class with given instance
+        if (!class_exists($instance)) {
+            throw new MustBeInstanceOfLiteDB('First parameter for with() method must be instance of LiteModel');
+        }
+
         $withClass = new $instance();
 
-        // TODO litemodel instance'ı olmak zorunda
+        # Throw exception if class is not instance of LiteModel
+        if (!$withClass instanceof LiteModel){
+            throw new MustBeInstanceOfLiteDB('First parameter for with() method must be instance of LiteModel');
+        }
 
         $foreignTable = $withClass->tableName(); # Foreign table name
         $foreignTablePrimary = $withClass->primaryKey(); # Foreign table's primary key

@@ -2,8 +2,6 @@
 
 namespace Codethereal\Database\Sqlite;
 
-use Codethereal\Database\Sqlite\Singleton;
-
 class LiteDB extends Singleton
 {
     const ORDER_ASC = 'ASC';
