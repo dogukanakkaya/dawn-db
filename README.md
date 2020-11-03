@@ -26,9 +26,9 @@ Now you can start to use db queries like:
 ## Reading
 
 ```php
-$oneRow = $db->select('name,email,password')->where('users.id', 2)->row('posts');
+$oneRow = $db->select('name,email,password')->where('users.id', 2)->row('posts'); // SELECT name,email,password FROM posts WHERE users.id = 2
 
-$result = $db->select('name,email,password')->get('users');
+$result = $db->select('name,email,password')->get('users'); // SELECT name,email,password FROM posts
   
 # For mode 1: it returns you an array with db column keys
 # For mode 2: it returns you an array with index numbers
