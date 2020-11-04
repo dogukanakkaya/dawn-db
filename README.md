@@ -233,6 +233,18 @@ try {
     echo "<pre>";
         print_r($e->getErrors());
     echo "</pre>";
+    /*
+    [name] => Array
+        (
+            [0] => The User name field must be at least 5 characters in length.
+        )
+
+    [email] => Array
+        (
+            [0] => The User email is required.
+            [1] => The User email field must contain a valid email address.
+        )
+    */
 }
 ```
 
