@@ -1,0 +1,13 @@
+{
+  "required": "The {field} is required.",
+  "min": "The {field} field must be at least {param} characters in length.",
+  "max": "The {field} field cannot exceed {param} characters in length.",
+  "exact": "The {field} field must be exactly {param} characters in length.",
+  "email": "The {field} field must contain a valid email address.",
+  "less": "The {field} field must contain a number less than {param}.",
+  "lesseq": "The {field} field must contain a number less than or equal to {param}.",
+  "greater": "The {field} field must contain a number greater than {param}.",
+  "greatereq": "The {field} field must contain a number greater than or equal to {param}.",
+  "match": "The {field} field does not match the {param} field.",
+  "int": "The {field} field must contain an integer."
+}
