@@ -14,6 +14,11 @@ abstract class LiteModel extends LiteDB implements ILiteModel
      */
     private Validation $validation;
 
+    /**
+     * @var string
+     */
+    protected ?string $langFile = null;
+
     public function __construct()
     {
         parent::__construct();
@@ -58,7 +63,9 @@ abstract class LiteModel extends LiteDB implements ILiteModel
 
     public function create($data)
     {
-        $validated = $this->validation->validate($this->rules(), $data);
+        $rules = $this->rules();
+        $this->validation->setLang($this->langFile);
+        $validated = $this->validation->validate($rules, $data);
         if (!$validated){
             $model = get_called_class();
             throw new ModelNotValidated("Validation failed for model : $model",422, null, $this->validation->errors());
@@ -68,6 +75,13 @@ abstract class LiteModel extends LiteDB implements ILiteModel
 
     public function change($data, int $id)
     {
+        $rules = $this->rules();
+        $this->validation->setLang($this->langFile);
+        $validated = $this->validation->validate($rules, $data);
+        if (!$validated){
+            $model = get_called_class();
+            throw new ModelNotValidated("Validation failed for model : $model",422, null, $this->validation->errors());
+        }
         return $this->where($this->primaryKey(), $id)->update($this->tableName(), $data);
     }
 

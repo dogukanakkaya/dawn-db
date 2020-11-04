@@ -19,25 +19,11 @@ class Validation
     private array $data;
 
     /**
-     * Validation constructor.
-     * @param string|null $langJson
-     */
-    public function __construct(string $langJson = null)
-    {
-        if ($langJson !== null){
-            $this->lang = json_decode(file_get_contents($langJson));
-        }else{
-            $langFile = __DIR__ . "/Asset/en.json";
-            $this->lang = json_decode(file_get_contents($langFile));
-        }
-    }
-
-    /**
      * @param $validations
-     * @param array $data
+     * @param $data
      * @return bool
      */
-    public function validate($validations, array $data)
+    public function validate($validations, $data)
     {
         $this->data = $data;
         foreach ($validations as $field => $validation){
@@ -60,6 +46,19 @@ class Validation
             }
         }
         return count((array)$this->error) > 0 ? false : true;
+    }
+
+    /**
+     * @param string|null $langJson
+     */
+    public function setLang(string $langJson = null)
+    {
+        if ($langJson !== null){
+            $this->lang = json_decode(file_get_contents($langJson));
+        }else{
+            $langFile = __DIR__ . "/Asset/en.json";
+            $this->lang = json_decode(file_get_contents($langFile));
+        }
     }
 
     /**

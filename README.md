@@ -152,6 +152,14 @@ class Post extends LiteModel
     {
         return 'id';
     }
+
+    # Validation rules since v1.2.0
+    public function rules(): array
+    {
+        return [
+            "name" => ['label' => 'Post name', 'rules' => 'required|min[5]'],
+        ];
+    }
 }
 
 namespace whatever\model;
@@ -167,13 +175,45 @@ class User extends LiteModel
     {
         return 'id';
     }
+
+    # Validation rules since v1.2.0
+    public function rules(): array
+    {
+        # To change language messages you must set a language file with json extension (default: 'en.json' file in my namespace)
+        $this->langFile = __DIR__ . "/tr.json";
+
+        # Example json file
+        /*
+
+        {
+          "required": "The {field} is required.",
+          "min": "The {field} field must be at least {param} characters in length.",
+          "max": "The {field} field cannot exceed {param} characters in length.",
+          "exact": "The {field} field must be exactly {param} characters in length.",
+          "email": "The {field} field must contain a valid email address.",
+          "less": "The {field} field must contain a number less than {param}.",
+          "lesseq": "The {field} field must contain a number less than or equal to {param}.",
+          "greater": "The {field} field must contain a number greater than {param}.",
+          "greatereq": "The {field} field must contain a number greater than or equal to {param}.",
+          "match": "The {field} field does not match the {param} field.",
+          "int": "The {field} field must contain an integer."
+        }
+
+        */
+
+        return [
+            "name" => ['label' => 'User name', 'rules' => 'required|min[5]'],
+            "email" => ['label' => 'User email', 'rules' => 'required|email']
+        ];
+    }
 }
 
 $post = new Post();
 
 # You can pass an array as second parameter to with() method like: ['reference' => 'user_id']
-# Default reference for it is the singular table name (without s at the end if exists) underscore id
+# Default reference for it is the singular table name (without 's' at the end if exists) underscore id
 $withJoin = $post->with(User::class)->readOne(1, 'posts.name as postName, email');
+
 
 // read() and readOne() accepts select parameters optional, default *
 $post->read("*"); # Like get, you must iterate it in a while loop with fetchArray() method
@@ -181,6 +221,19 @@ $post->readOne(1, "*"); # Pass the primary key value as param
 $post->create(['name' => 'New post codethereal']);
 $post->change(['name' => 'New post codethereal updated'], 1); # Second parameter is the primary key value
 $post->destroy(1);
+
+
+# Validating
+$user = new User();
+
+# Wrap creating or changing in a try catch like:
+try {
+    $user->create(['name' => 'mee']);
+}catch (\Codethereal\Database\Sqlite\Exceptions\ModelNotValidated $e){
+    echo "<pre>";
+        print_r($e->getErrors());
+    echo "</pre>";
+}
 ```
 
 # Migrations
