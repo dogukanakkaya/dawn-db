@@ -1,4 +1,4 @@
-# sqlitethereal-php
+# sqlite-php
 SQLite3 Library For PHP 
 
 ```php
