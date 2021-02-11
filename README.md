@@ -249,7 +249,7 @@ try {
 ```
 
 # Migrations
-Migrations are not applied to core files at the moment but you can just copy the content of [this file](https://www.codethereal.com/migrations.txt) 
+Migrations are not applied to core files at the moment but you can just copy the content of [this file](http://cdn.codethereal.com/php/sqlite-php/migrations.txt) 
 and paste it into your **migrations.php** file in root folder and run from terminal
 
 You should change dbname and migrations **(if your path and dbname is different)** path in this file like:
