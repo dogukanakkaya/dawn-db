@@ -44,20 +44,19 @@ while ($row = $result->fetchArray(1)) {
 ### Where
 
 ```php
-# Allowed where operators are: ['=', '>', '<', '>=', '<=']
+# Allowed where operators are: ['=', '>', '<', '>=', '<=', 'LIKE', 'NOT LIKE', 'IN', 'NOT IN']
 $db->where('id', 2)->get('users'); // SELECT * FROM users WHERE id = 2
 $db->where('id', '>', 2)->get('users'); // SELECT * FROM users WHERE id > 2
 $db->where([
   ['id', 2],
-  ['count' '<=', 15],
+  ['count', '<=', 15],
   ['email', 'doguakkaya27@gmail.com']
 ])->get('users'); // SELECT * FROM users WHERE id = 2 AND count <= 15 AND email='doguakkaya27@gmail.com'
 ```
 
 ### Or Where
 ```php
-$result = $db
-    ->select('name,email')
+$db->select('name,email')
     ->where('id', 5)
     ->orWhere('name', 'dogukan')
     ->row('users'); // SELECT name,email FROM users WHERE id = 5 OR name = 'dogukan'
@@ -65,8 +64,7 @@ $result = $db
 
 ### Nested Where
 ```php
-$result = $db
-    ->select('name,email')
+$db->select('name,email')
     ->where('id', 5)
     ->orWhere(function ($query) {
         return $query
