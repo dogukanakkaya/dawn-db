@@ -63,21 +63,24 @@ class LiteDB extends Singleton
 
     public function where($column, $operator = null, $value = null)
     {
-        if (is_array($column) && count($column) > 0) {
+        if (is_callable($column)){
+            $nestedQuery = $column(new self());
+            $this->addWhere("(", implode(' AND ', $nestedQuery->where), ")");
+        } elseif (is_array($column) && count($column) > 0) {
             foreach ($column as $item) {
                 if (isset($item[2]) && in_array($operator, $this->allowedOperators)) {
-                    $this->addWhere([$item[0], $item[1], ":$item[0]"]);
+                    $this->addWhere($item[0], $item[1], ":$item[0]");
                     $this->addBinding([":$item[0]", $item[2]]);
                 } else {
-                    $this->addWhere([$item[0], "=", ":$item[0]"]);
+                    $this->addWhere($item[0], "=", ":$item[0]");
                     $this->addBinding([":$item[0]", $item[1]]);
                 }
             }
         } else if ($value !== null && in_array($operator, $this->allowedOperators)) {
-            $this->addWhere([$column, $operator, ":$column"]);
+            $this->addWhere($column, $operator, ":$column");
             $this->addBinding([":$column", $value]);
         } else {
-            $this->addWhere([$column, "=", ":$column"]);
+            $this->addWhere($column, "=", ":$column");
             $this->addBinding([":$column", $operator]);
         }
         return $this;
@@ -85,25 +88,13 @@ class LiteDB extends Singleton
 
     public function like(string $column, $value)
     {
-        if (is_array($column) && count($column) > 0) {
-            foreach ($column as $item) {
-                $this->where($item[0], 'LIKE', "$item[1]");
-            }
-        } else {
-            $this->where($column, 'LIKE', "$value");
-        }
+        $this->where($column, 'LIKE', $value);
         return $this;
     }
 
     public function notLike(string $column, $value)
     {
-        if (is_array($column) && count($column) > 0) {
-            foreach ($column as $item) {
-                $this->where($item[0], 'NOT LIKE', "$item[1]");
-            }
-        } else {
-            $this->where($column, 'NOT LIKE', "$value");
-        }
+        $this->where($column, 'NOT LIKE', $value);
         return $this;
     }
 
@@ -113,7 +104,7 @@ class LiteDB extends Singleton
             $value = self::escapeString($value);
         }
         $inQuery = implode(",", $values);
-        $this->addWhere([$column, "IN", "($inQuery)"]);
+        $this->addWhere($column, "IN", "($inQuery)");
         return $this;
     }
 
@@ -123,7 +114,7 @@ class LiteDB extends Singleton
             $value = self::escapeString($value);
         }
         $notInQuery = implode(",", $values);
-        array_push($this->where, "$column NOT IN ($notInQuery)");
+        $this->addWhere($column, "NOT IN", "($notInQuery)");
         return $this;
     }
 
@@ -354,9 +345,9 @@ class LiteDB extends Singleton
         array_push($this->bindings, $binding);
     }
 
-    private function addWhere($where){
+    private function addWhere(...$where){
         # Remove any dot notation inside column, table.key
-        $where[2] = str_replace(".", "", $where[2]);
+        //$where[2] = str_replace(".", "", $where[2]);
         array_push($this->where, implode(" ", $where));
     }
 }
