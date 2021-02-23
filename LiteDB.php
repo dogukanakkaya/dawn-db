@@ -61,28 +61,53 @@ class LiteDB extends Singleton
         return $this;
     }
 
-    public function where($column, $operator = null, $value = null)
+    public function where($column, $operator = null, $value = null, $condition = ' AND ')
     {
+        // I will also use this as a unique identifier for bindings because
+        // Multiple bindings with same key occurs a problem so i will append where count
+        // at the end of every binding
+        $countWheres = count($this->where);
+
+        // If first where query, do not add any condition
+        if ($countWheres <= 0){
+            $condition = '';
+        }
+
         if (is_callable($column)){
+            // Nested query instance
             $nestedQuery = $column(new self());
-            $this->addWhere("(", implode(' AND ', $nestedQuery->where), ")");
+
+            // Add sub wheres
+            $this->addWhere($condition, "(", implode($nestedQuery->where), ")");
+
+            // Merge nested queries bindings with parent query
+            $this->bindings = array_merge($this->bindings, $nestedQuery->bindings);
         } elseif (is_array($column) && count($column) > 0) {
+            // If multiple where conditions passed as array loop over them
             foreach ($column as $item) {
-                if (isset($item[2]) && in_array($operator, $this->allowedOperators)) {
-                    $this->addWhere($item[0], $item[1], ":$item[0]");
-                    $this->addBinding([":$item[0]", $item[2]]);
+                if (isset($item[2]) && $this->validOperator($operator)) {
+                    $this->addWhere($condition, $item[0], $item[1], ":$item[0]".$countWheres);
+                    $this->addBinding([":$item[0]".$countWheres, $item[2]]);
                 } else {
-                    $this->addWhere($item[0], "=", ":$item[0]");
-                    $this->addBinding([":$item[0]", $item[1]]);
+                    $this->addWhere($condition, $item[0], "=", ":$item[0]".$countWheres);
+                    $this->addBinding([":$item[0]".$countWheres, $item[1]]);
                 }
             }
-        } else if ($value !== null && in_array($operator, $this->allowedOperators)) {
-            $this->addWhere($column, $operator, ":$column");
-            $this->addBinding([":$column", $value]);
+        } else if ($value !== null && $this->validOperator($operator)) {
+            // Single condition with operator
+            $this->addWhere($condition, $column, $operator, ":$column".$countWheres);
+            $this->addBinding([":$column".$countWheres, $value]);
         } else {
-            $this->addWhere($column, "=", ":$column");
-            $this->addBinding([":$column", $operator]);
+            // Single condition with default operator
+            $this->addWhere($condition, $column, "=", ":$column".$countWheres);
+            $this->addBinding([":$column".$countWheres, $operator]);
         }
+        return $this;
+    }
+
+    public function orWhere($column, $operator = null, $value = null)
+    {
+        $this->where($column, $operator, $value, ' OR ');
         return $this;
     }
 
@@ -287,7 +312,7 @@ class LiteDB extends Singleton
     {
         if (count($this->where) > 0) {
             $this->query .= " WHERE ";
-            $this->query .= implode(" AND ", $this->where);
+            $this->query .= implode(" ", $this->where);
         }
         return $this;
     }
@@ -345,9 +370,18 @@ class LiteDB extends Singleton
         array_push($this->bindings, $binding);
     }
 
-    private function addWhere(...$where){
-        # Remove any dot notation inside column, table.key
-        //$where[2] = str_replace(".", "", $where[2]);
-        array_push($this->where, implode(" ", $where));
+    private function addWhere($condition, ...$where){
+        array_push($this->where, $condition . implode(" ", $where));
+    }
+
+    /**
+     * Check if valid operator
+     *
+     * @param $operator
+     * @return bool
+     */
+    private function validOperator($operator)
+    {
+        return in_array($operator, $this->allowedOperators);
     }
 }

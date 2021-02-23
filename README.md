@@ -54,6 +54,29 @@ $db->where([
 ])->get('users'); // SELECT * FROM users WHERE id = 2 AND count <= 15 AND email='doguakkaya27@gmail.com'
 ```
 
+### Or Where
+```php
+$result = $db
+    ->select('name,email')
+    ->where('id', 5)
+    ->orWhere('name', 'dogukan')
+    ->row('users'); // SELECT name,email FROM users WHERE id = 5 OR name = 'dogukan'
+```
+
+### Nested Where
+```php
+$result = $db
+    ->select('name,email')
+    ->where('id', 5)
+    ->orWhere(function ($query) {
+        return $query
+            ->where('name', 'dogukan')
+            ->where('email', 'i@codethereal.com');
+    })
+    ->orWhere('name', 'codethereal')
+    ->row('users'); // SELECT name,email FROM users WHERE id = 5 OR (name = 'dogukan' AND email = 'i@codethereal.com') OR name = 'codethereal'
+```
+
 ### Where In/Not In
 
 ```php
