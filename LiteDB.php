@@ -2,10 +2,8 @@
 
 namespace Codethereal\Database\Sqlite;
 
-class LiteDB extends Singleton
+class LiteDB extends \SQLite3
 {
-    private Singleton $db;
-
     private array $where = [];
 
     private array $bindings = [];
@@ -23,7 +21,8 @@ class LiteDB extends Singleton
      */
     public function __construct(string $path = "")
     {
-        $this->db = parent::instance($path);
+        // parent::__construct($path);
+        $this->open($path);
     }
 
     public function select(string $select = "*"): LiteDB
@@ -160,12 +159,12 @@ class LiteDB extends Singleton
 
         $this->query = "INSERT INTO $table ($insertKeys) VALUES ($insertParams)";
 
-        $statement = $this->db->prepare($this->query);
+        $statement = $this->prepare($this->query);
         foreach ($data as $key => $value) {
             $statement->bindValue(":$key", $value);
         }
         $this->end();
-        return $statement->execute() ? $this->db->lastInsertRowID() : false;
+        return $statement->execute() ? $this->lastInsertRowID() : false;
     }
 
     public function update(string $table, array $data): \SQLite3Result
@@ -228,7 +227,7 @@ class LiteDB extends Singleton
      */
     public function bindAndReturn(array $bindings): false|\SQLite3Stmt
     {
-        $statement = $this->db->prepare($this->query);
+        $statement = $this->prepare($this->query);
         foreach ($bindings as $binding) {
             $statement->bindValue($binding[0], $binding[1]);
         }
