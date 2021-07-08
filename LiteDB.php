@@ -236,30 +236,6 @@ class LiteDB extends Singleton
     }
 
     /**
-     * Pure query method of SQLite3
-     */
-    public function query($query)
-    {
-        return $this->db->query($query);
-    }
-
-    /**
-     * Pure querySingle method of SQLite3
-     */
-    public function querySingle($query, $entireRow = false)
-    {
-        return $this->db->querySingle($query, $entireRow);
-    }
-
-    /**
-     * Pure exec method of SQLite3
-     */
-    public function exec($query)
-    {
-        return $this->db->exec($query);
-    }
-
-    /**
      * Combine query with where conditions
      */
     private function withWhere(): LiteDB
