@@ -4,64 +4,35 @@ namespace Codethereal\Database\Sqlite;
 
 class LiteDB extends Singleton
 {
-    const ORDER_ASC = 'ASC';
-    const ORDER_DESC = 'DESC';
-
-    const JOIN_INNER = 'INNER';
-    const JOIN_LEFT = 'LEFT OUTER';
-    const JOIN_CROSS = 'CROSS';
-
     private Singleton $db;
 
-    /**
-     * @var array
-     */
     private array $where = [];
-
-    /**
-     * Bindings array
-     * @var array
-     */
 
     private array $bindings = [];
 
-    /**
-     * Allowed where condition operators
-     * @var array|string[]
-     */
     private array $allowedOperators = ['=', '>', '<', '>=', '<=', 'LIKE', 'NOT LIKE', 'IN', 'NOT IN'];
 
-    /**
-     * @var array
-     */
     private array $orderings = [];
 
-    /**
-     * @var array
-     */
     private array $joins = [];
 
-    /**
-     * @var string
-     */
-    private string $query = "";
+    private string $query = '';
 
     /**
      * LiteDB constructor.
-     * @param string $path
      */
     public function __construct(string $path = "")
     {
         $this->db = parent::instance($path);
     }
 
-    public function select(string $select = "*")
+    public function select(string $select = "*"): LiteDB
     {
         $this->query .= "SELECT $select FROM {{table}} ";
         return $this;
     }
 
-    public function where($column, $operator = null, $value = null, $condition = ' AND ')
+    public function where(string|array|\Closure $column, $operator = null, $value = null, string $condition = ' AND '): LiteDB
     {
         // I will also use this as a unique identifier for bindings because
         // Multiple bindings with same key occurs a problem so i will append where count
@@ -105,25 +76,25 @@ class LiteDB extends Singleton
         return $this;
     }
 
-    public function orWhere($column, $operator = null, $value = null)
+    public function orWhere(string|array|\Closure $column, $operator = null, $value = null): LiteDB
     {
         $this->where($column, $operator, $value, ' OR ');
         return $this;
     }
 
-    public function like(string $column, $value)
+    public function like(string $column, string $value): LiteDB
     {
         $this->where($column, 'LIKE', $value);
         return $this;
     }
 
-    public function notLike(string $column, $value)
+    public function notLike(string $column, string $value): LiteDB
     {
         $this->where($column, 'NOT LIKE', $value);
         return $this;
     }
 
-    public function in(string $column, array $values)
+    public function in(string $column, array $values): LiteDB
     {
         foreach ($values as &$value) {
             $value = self::escapeString($value);
@@ -133,7 +104,7 @@ class LiteDB extends Singleton
         return $this;
     }
 
-    public function notIn(string $column, array $values)
+    public function notIn(string $column, array $values): LiteDB
     {
         foreach ($values as &$value) {
             $value = self::escapeString($value);
@@ -143,7 +114,7 @@ class LiteDB extends Singleton
         return $this;
     }
 
-    public function orderBy($column, string $sortMethod = "ASC")
+    public function orderBy(string|array $column, string $sortMethod = "ASC"): LiteDB
     {
         if (is_array($column)) {
             foreach ($column as $item) {
@@ -156,16 +127,16 @@ class LiteDB extends Singleton
         return $this;
     }
 
-    public function join(string $table, string $condition = "", $type = self::JOIN_LEFT)
+    public function join(string $table, string $condition = "", $type = 'LEFT OUTER'): LiteDB
     {
         $condition = !empty($condition) ? "ON $condition" : "";
         array_push($this->joins, " $type JOIN $table $condition");
         return $this;
     }
 
-    public function get(string $table)
+    public function get(string $table): \SQLite3Result
     {
-        if (strpos($this->query, '{{table}}') !== false) {
+        if (str_contains($this->query, '{{table}}')) {
             // If there is a table inside query replace it with given one, else create a query
             $this->query = str_replace('{{table}}', $table, $this->query);
         } else {
@@ -174,12 +145,12 @@ class LiteDB extends Singleton
         return $this->withJoin()->withWhere()->withOrder()->bindAndExecute($this->bindings);
     }
 
-    public function row(string $table)
+    public function row(string $table): bool|array
     {
         return $this->get($table)->fetchArray(SQLITE3_ASSOC);
     }
 
-    public function insert(string $table, $data)
+    public function insert(string $table, array $data): bool|int
     {
         $keys = array_keys($data);
         $insertKeys = implode(",", $keys);
@@ -197,7 +168,7 @@ class LiteDB extends Singleton
         return $statement->execute() ? $this->db->lastInsertRowID() : false;
     }
 
-    public function update(string $table, $data)
+    public function update(string $table, array $data): \SQLite3Result
     {
         $params = array_map(fn($item) => "$item = :$item", array_keys($data));
         $params = implode(",", $params);
@@ -214,7 +185,7 @@ class LiteDB extends Singleton
         return $statement->execute();
     }
 
-    public function count(string $table)
+    public function count(string $table): int
     {
         $this->query = "SELECT COUNT(*) as count FROM $table";
 
@@ -224,7 +195,7 @@ class LiteDB extends Singleton
         return $result['count'] ?? 0;
     }
 
-    public function delete($table)
+    public function delete(string $table): \SQLite3Result
     {
         $this->query = "DELETE FROM $table";
 
@@ -235,36 +206,27 @@ class LiteDB extends Singleton
 
     /**
      * Just begins a new sql query (mostly used with bindAndExecute() method)
-     * @param string $sql
-     * @return $this
      */
-    public function begin(string $sql)
+    public function begin(string $query): LiteDB
     {
-        $this->query = $sql;
+        $this->query = $query;
         return $this;
     }
 
     /**
      * Binds the values and executes it immediately
-     * @param array $bindings
-     * @return \SQLite3Result
      */
-    public function bindAndExecute(array $bindings)
+    public function bindAndExecute(array $bindings): \SQLite3Result
     {
-        $statement = $this->db->prepare($this->query);
-        foreach ($bindings as $binding) {
-            $statement->bindValue($binding[0], $binding[1]);
-        }
+        $statement = $this->bindAndReturn($bindings);
         $this->end();
-        return $statement->execute();
+        return $statement?->execute();
     }
 
     /**
      * Binds the values and returns the statement instead executing it
-     * @param array $bindings
-     * @return false|\SQLite3Stmt
      */
-    public function bindAndReturn(array $bindings)
+    public function bindAndReturn(array $bindings): false|\SQLite3Stmt
     {
         $statement = $this->db->prepare($this->query);
         foreach ($bindings as $binding) {
@@ -275,40 +237,32 @@ class LiteDB extends Singleton
 
     /**
      * Pure query method of SQLite3
-     * @param string $sql
-     * @return \SQLite3Result
      */
-    public function query($sql)
+    public function query($query)
     {
-        return $this->db->query($sql);
+        return $this->db->query($query);
     }
 
     /**
      * Pure querySingle method of SQLite3
-     * @param string $sql
-     * @param bool $entireRow
-     * @return mixed
      */
-    public function querySingle($sql, $entireRow = false)
+    public function querySingle($query, $entireRow = false)
     {
-        return $this->db->querySingle($sql, $entireRow);
+        return $this->db->querySingle($query, $entireRow);
     }
 
     /**
      * Pure exec method of SQLite3
-     * @param string $sql
-     * @return bool
      */
-    public function exec($sql)
+    public function exec($query)
     {
-        return $this->db->exec($sql);
+        return $this->db->exec($query);
     }
 
     /**
      * Combine query with where conditions
-     * @return $this
      */
-    private function withWhere()
+    private function withWhere(): LiteDB
     {
         if (count($this->where) > 0) {
             $this->query .= " WHERE ";
@@ -319,9 +273,8 @@ class LiteDB extends Singleton
 
     /**
      * Combine query with order conditions
-     * @return $this
      */
-    private function withOrder()
+    private function withOrder(): LiteDB
     {
         if (count($this->orderings) > 0) {
             $this->query .= " ORDER BY ";
@@ -332,9 +285,8 @@ class LiteDB extends Singleton
 
     /**
      * Combine query with joins
-     * @return $this
      */
-    private function withJoin()
+    private function withJoin(): LiteDB
     {
         if (count($this->joins) > 0) {
             $this->query .= implode(" ", $this->joins);
@@ -345,7 +297,7 @@ class LiteDB extends Singleton
     /**
      * End the query, empty arrays
      */
-    private function end()
+    private function end(): void
     {
         $this->bindings = [];
         $this->orderings = [];
@@ -354,12 +306,12 @@ class LiteDB extends Singleton
         $this->query = "";
     }
 
-    public function transBegin()
+    public function transBegin(): void
     {
         $this->exec('BEGIN;');
     }
 
-    public function transCommit()
+    public function transCommit(): void
     {
         $this->exec('COMMIT;');
     }
@@ -376,11 +328,8 @@ class LiteDB extends Singleton
 
     /**
      * Check if valid operator
-     *
-     * @param $operator
-     * @return bool
      */
-    private function validOperator($operator)
+    private function validOperator(string $operator): bool
     {
         return in_array($operator, $this->allowedOperators);
     }

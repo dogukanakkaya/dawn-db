@@ -5,15 +5,14 @@ use SQLite3;
 
 class Singleton extends SQLite3
 {
-    private static $instance;
+    private static Singleton|null $instance = null;
 
-    private static $path;
+    private static string $path = '';
 
     /**
      * Call this method to get singleton
-     * @return Singleton
      */
-    public static function instance($path)
+    public static function instance($path): Singleton
     {
         self::$path = $path;
         # If no instance then make one
@@ -27,21 +26,6 @@ class Singleton extends SQLite3
      * Make constructor private, so nobody can call "new Class".
      */
     private function __construct() {
-        $this->open(self::$path);
+        parent::__construct(self::$path);
     }
-
-    /**
-     * Make clone magic method private, so nobody can clone instance.
-     */
-    private function __clone() {}
-
-    /**
-     * Make sleep magic method private, so nobody can serialize instance.
-     */
-    private function __sleep() {}
-
-    /**
-     * Make wakeup magic method private, so nobody can unserialize instance.
-     */
-    private function __wakeup() {}
 }

@@ -1,7 +1,7 @@
 # sqlite-php
-SQLite3 Library For PHP 
+SQLite3 Library For PHP ^8.0
 
-```php
+```
 composer require codethereal/sqlite-php
 ```
 <br/>
@@ -94,8 +94,8 @@ $db->notLike('name', '%Codethereal%')->get('users'); // SELECT * FROM users WHER
 ```php
 $db->orderBy('name', 'ASC')->get('users'); // SELECT * FROM users ORDER BY name ASC
 $db->orderBy([
-  ['name', LiteDB::ORDER_ASC],
-  ['id', LiteDB::ORDER_DESC],
+  ['name', 'ASC'],
+  ['id', 'DESC'],
 ])->get('users'); // SELECT * FROM users ORDER BY name ASC, id DESC
 ```
 
@@ -104,7 +104,7 @@ $db->orderBy([
 ```php
 # Available join methods are: ['INNER', 'CROSS', 'LEFT (OUTER)']
 $db->select('users.name as userName, posts.name as postName')->join('users', 'users.id = posts.user_id', 'CROSS')->get('posts');
-$db->select('users.name as userName, posts.name as postName')->join('users', 'users.id = posts.user_id', LiteDB::JOIN_INNER)->get('posts');
+$db->select('users.name as userName, posts.name as postName')->join('users', 'users.id = posts.user_id', 'INNER')->get('posts');
 ```
 
 ### Count
