@@ -19,7 +19,7 @@ class LiteDB extends \SQLite3
     /**
      * LiteDB constructor.
      */
-    public function __construct(string $path = "")
+    public function __construct(string $path = '', private int $nestCount = 0)
     {
         // parent::__construct($path);
         $this->open($path);
@@ -31,11 +31,8 @@ class LiteDB extends \SQLite3
         return $this;
     }
 
-    public function where(string|array|\Closure $column, $operator = null, $value = null, string $condition = ' AND '): LiteDB
+    public function where(string|array|\Closure $column, $operatorOrValue = null, $value = null, string $condition = ' AND '): LiteDB
     {
-        // I will also use this as a unique identifier for bindings because
-        // Multiple bindings with same key occurs a problem so i will append where count
-        // at the end of every binding
         $countWheres = count($this->where);
 
         // If first where query, do not add any condition
@@ -43,41 +40,43 @@ class LiteDB extends \SQLite3
             $condition = '';
         }
 
+        // use this as a unique identifier for bindings because
+        // multiple bindings with same key occurs a problem so i will append where count
+        // at the end of every binding
+        $uniqueBinder = $countWheres . $this->nestCount;
+
         if (is_callable($column)){
             // Nested query instance
-            $nestedQuery = $column(new self());
+            $nestedQuery = $column(new self('', $this->nestCount + 1));
 
             // Add sub wheres
-            $this->addWhere($condition, "(", implode($nestedQuery->where), ")");
+            $this->addWhere($condition, '(', implode($nestedQuery->where), ')');
 
             // Merge nested queries bindings with parent query
             $this->bindings = array_merge($this->bindings, $nestedQuery->bindings);
         } elseif (is_array($column) && count($column) > 0) {
             // If multiple where conditions passed as array loop over them
             foreach ($column as $item) {
-                if (isset($item[2]) && $this->validOperator($operator)) {
-                    $this->addWhere($condition, $item[0], $item[1], ":$item[0]".$countWheres);
-                    $this->addBinding([":$item[0]".$countWheres, $item[2]]);
+                if (isset($item[2]) && $this->validOperator($item[1])) {
+                    $this->where($item[0], $item[1], $item[0], $condition);
                 } else {
-                    $this->addWhere($condition, $item[0], "=", ":$item[0]".$countWheres);
-                    $this->addBinding([":$item[0]".$countWheres, $item[1]]);
+                    $this->where($item[0], '=', $item[0], $condition);
                 }
             }
-        } else if ($value !== null && $this->validOperator($operator)) {
+        } else if ($value !== null && $this->validOperator($operatorOrValue)) {
             // Single condition with operator
-            $this->addWhere($condition, $column, $operator, ":$column".$countWheres);
-            $this->addBinding([":$column".$countWheres, $value]);
+            $this->addWhere($condition, $column, $operatorOrValue, ':' . $column . $uniqueBinder);
+            $this->addBinding([':' . $column . $uniqueBinder, $value]);
         } else {
-            // Single condition with default operator
-            $this->addWhere($condition, $column, "=", ":$column".$countWheres);
-            $this->addBinding([":$column".$countWheres, $operator]);
+            $this->where($column, '=', $operatorOrValue, $condition);
         }
+
         return $this;
     }
 
-    public function orWhere(string|array|\Closure $column, $operator = null, $value = null): LiteDB
+    public function orWhere(string|array|\Closure $column, $operatorOrValue = null, $value = null): LiteDB
     {
-        $this->where($column, $operator, $value, ' OR ');
+        $this->where($column, $operatorOrValue, $value, ' OR ');
         return $this;
     }
 

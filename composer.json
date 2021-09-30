@@ -11,12 +11,12 @@
         }
     ],
     "require": {
-        "php": ">=7.4",
+        "php": "^8.0",
         "ext-sqlite3": "*"
     },
     "autoload": {
         "psr-4": {
-            "Codethereal\\Database\\Sqlite\\": "."
+            "Codethereal\\Database\\Sqlite\\": "./src"
         }
     },
     "minimum-stability": "dev"
