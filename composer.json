@@ -1,8 +1,9 @@
 {
-    "name": "codethereal/sqlite-php",
+    "name": "codethereal/dawn-db",
     "keywords": [
         "php",
-        "sqlite"
+        "database",
+        "query-builder"
     ],
     "authors": [
         {
