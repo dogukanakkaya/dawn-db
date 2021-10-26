@@ -16,7 +16,7 @@
     },
     "autoload": {
         "psr-4": {
-            "Codethereal\\Database\\Sqlite\\": "./src"
+            "Codethereal\\Database\\": "./src"
         }
     },
     "minimum-stability": "dev"
