@@ -1,7 +1,9 @@
-Database Drivers and Query Builder For PHP ^8.0
+# dawn-db
+
+Database drivers and query builder library for PHP
 
 ```
-composer require codethereal/sqlite-php
+composer require dogukanakkaya/dawn-db
 ```
 
 <br>
