@@ -131,8 +131,8 @@ $db->where('id', 1)->delete('users'); // DELETE FROM users WHERE id = 1
 
 ```php
 # You don't have to wrap with try-catch block. It will rollback on any error
-$db->transBegin();
+$sqlite->transBegin();
 $id = $db->insert('users', ['name' => 'Codethereal', 'email' => 'info@codethereal.com']);
 $db->insert('postss', ['name' => 'New post', 'user_id' => $id]);
-$db->transCommit();
+$sqlite->transCommit();
 ```
